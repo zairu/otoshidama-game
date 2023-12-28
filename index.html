@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>お年玉ゲーム</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden; /* キャンバス外のスクロールを無効にする */
+    }
+
+    canvas {
+      display: block;
+      margin: auto;
+      background-color: #f0f0f0; /* キャンバスの背景色を指定 */
+    }
+  </style>
+</head>
+<body>
+
+<script src="matter-js/build/matter.js"></script>
+<script>
+  const { Engine, Runner, Bodies, Composite, World } = Matter;
+
+  const engine = Engine.create();
+  const runner = Runner.create();
+
+  // 縦横比が1:1になるようにキャンバスサイズを設定
+  const aspectRatio = 1;
+  const size = Math.min(window.innerWidth, window.innerHeight);
+  const width = size;
+  const height = size * aspectRatio;
+
+  const render = Matter.Render.create({
+    element: document.body,
+    engine: engine,
+    options: {
+      width: width,
+      height: height,
+      wireframes: false
+    }
+  });
+
+  render.canvas.width = width;
+  render.canvas.height = height;
+
+  Runner.run(runner, engine);
+
+  const circle = Bodies.circle(width / 2, height / 2, size * 0.05, { restitution: 0.7 });
+
+  World.add(engine.world, [circle]);
+
+  Matter.Render.run(render);
+</script>
+
+</body>
+</html>
