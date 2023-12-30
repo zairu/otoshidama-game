@@ -21,37 +21,49 @@
 
 <script src="matter-js/build/matter.js"></script>
 <script>
-  const { Engine, Runner, Bodies, Composite, World } = Matter;
+  const { Engine, Runner, Bodies, World, Composite, Render } = Matter;
 
   const engine = Engine.create();
   const runner = Runner.create();
 
-  // 縦横比が1:1になるようにキャンバスサイズを設定
-  const aspectRatio = 1;
-  const size = Math.min(window.innerWidth, window.innerHeight);
-  const width = size;
-  const height = size * aspectRatio;
+  // 領域のサイズ
+  const fieldWidth = 600;
+  const fieldHeight = 600;
+  const upperPadding = 100;
+  const frameThickness = 20;
+  const leftPadding = frameThickness;
+  const rightPadding = frameThickness;
+  const bottomPadding = frameThickness;
+  const canvasWidth = fieldWidth + leftPadding / 2 + rightPadding / 2;
+  const canvasHeight = fieldHeight + upperPadding / 2 + bottomPadding;
 
-  const render = Matter.Render.create({
+  // 枠の作成
+  Composite.add(engine.world, [
+    Bodies.rectangle(canvasWidth / 2, canvasHeight, canvasWidth, frameThickness, { isStatic: true }),
+    Bodies.rectangle(0, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true }),
+    Bodies.rectangle(canvasWidth, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true }),
+  ]);
+
+  // ランナーの実行
+  Runner.run(runner, engine);
+
+  // ボディの作成（円）
+  const circle = Bodies.circle(canvasWidth / 2, canvasHeight / 5, canvasWidth / 20, { restitution: 0.7 });
+  const circle2 = Bodies.circle(canvasWidth / 2, -canvasHeight / 5, canvasWidth / 20, { restitution: 0.7 });
+
+  // コンポジットに円を追加
+  World.add(engine.world, [circle, circle2]);
+
+  // Matter.js エンジンの描画
+  Render.run(Render.create({
     element: document.body,
     engine: engine,
     options: {
-      width: width,
-      height: height,
+      width: canvasWidth,
+      height: canvasHeight,
       wireframes: false
     }
-  });
-
-  render.canvas.width = width;
-  render.canvas.height = height;
-
-  Runner.run(runner, engine);
-
-  const circle = Bodies.circle(width / 2, height / 2, size * 0.05, { restitution: 0.7 });
-
-  World.add(engine.world, [circle]);
-
-  Matter.Render.run(render);
+  }));
 </script>
 
 </body>
