@@ -47,6 +47,23 @@
   // ランナーの実行
   Runner.run(runner, engine);
 
+  const moneySettings = {
+    yen1 : { type:"circle", radius: 15, restitution: 0.7, next: "yen5" },
+    yen5 : { type:"circle", radius: 20, restitution: 0.7, next: "yen10" },
+    yen10: { type:"circle", radius: 30, restitution: 0.7, next: null },
+  };
+
+  function createYen(x, y, label) {
+    const setting = moneySettings[label];
+    if (setting.type === "circle") {
+      return Bodies.circle(x, y, setting.radius, { restitution: setting.restitution, label: label });
+    }
+    else if (setting.type === "rectangle") {
+      // todo
+    }
+    return null;
+  }
+
   function onCollision(event) {
     const pairs = event.pairs;
 
@@ -58,14 +75,16 @@
         const collisionX = (pair.bodyA.position.x + pair.bodyB.position.x) / 2;
         const collisionY = (pair.bodyA.position.y + pair.bodyB.position.y) / 2;
 
-        // 四角形の生成
-        const rectangle = Bodies.rectangle(collisionX, collisionY, canvasWidth / 20, canvasWidth / 20);
+        const nextLabel = moneySettings[pair.bodyA.label].next;
 
-        // 衝突した円を削除
+        // 衝突したobj削除
         World.remove(engine.world, [pair.bodyA, pair.bodyB]);
 
-        // 四角形を追加
-        World.add(engine.world, [rectangle]);
+        // 合成後のobj生成
+        if (nextLabel != null) {
+          const newYen = createYen(collisionX, collisionY, nextLabel);
+          World.add(engine.world, [newYen]);
+        }
       }
     }
   }
@@ -74,11 +93,15 @@
   Events.on(engine, 'collisionStart', onCollision);
 
   // ボディの作成（円）
-  const circle = Bodies.circle(canvasWidth / 2, canvasHeight / 5, canvasWidth / 20, { restitution: 0.7, label: "1 yen" });
-  const circle2 = Bodies.circle(canvasWidth / 2, -canvasHeight / 5, canvasWidth / 20, { restitution: 0.7, label: "1 yen" });
+  const circle = createYen(canvasWidth / 2, canvasHeight / 5, "yen1");
+  const circle2 = createYen(canvasWidth / 2, -canvasHeight / 5, "yen1");
+  const circle3 = createYen(canvasWidth / 2, -canvasHeight / 3, "yen5");
+  const circle4 = createYen(canvasWidth / 2, -canvasHeight, "yen5");
+  const circle5 = createYen(canvasWidth / 2, -canvasHeight * 2, "yen5");
+  const circle6 = createYen(canvasWidth / 2, -canvasHeight * 3, "yen10");
 
   // コンポジットに円を追加
-  World.add(engine.world, [circle, circle2]);
+  World.add(engine.world, [circle, circle2, circle3, circle4, circle5, circle6]);
 
   // Matter.js エンジンの描画
   Render.run(Render.create({
