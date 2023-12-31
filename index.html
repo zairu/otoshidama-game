@@ -21,10 +21,13 @@
 
 <script src="matter-js/build/matter.js"></script>
 <script>
-  const { Engine, Runner, Bodies, World, Composite, Render, Events } = Matter;
+  const { Engine, Runner, Bodies, World, Composite, Render, Events, Mouse, MouseConstraint } = Matter;
 
   const engine = Engine.create();
   const runner = Runner.create();
+
+  // ランナーの実行
+  Runner.run(runner, engine);
 
   // 領域のサイズ
   const fieldWidth = 600;
@@ -37,15 +40,24 @@
   const canvasWidth = fieldWidth + leftPadding / 2 + rightPadding / 2;
   const canvasHeight = fieldHeight + upperPadding / 2 + bottomPadding;
 
+  // Matter.js エンジンの描画
+  const render = Render.create({
+    element: document.body,
+    engine: engine,
+    options: {
+      width: canvasWidth,
+      height: canvasHeight,
+      wireframes: false
+    }
+  });
+  Render.run(render);
+
   // 枠の作成
   Composite.add(engine.world, [
     Bodies.rectangle(canvasWidth / 2, canvasHeight, canvasWidth, frameThickness, { isStatic: true }),
     Bodies.rectangle(0, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true }),
     Bodies.rectangle(canvasWidth, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true }),
   ]);
-
-  // ランナーの実行
-  Runner.run(runner, engine);
 
   const moneySettings = {
     yen1 : { type:"circle", radius: 15, restitution: 0.7, next: "yen5" },
@@ -92,6 +104,31 @@
   // Matter.js イベントハンドラの登録
   Events.on(engine, 'collisionStart', onCollision);
 
+  // マウスとマウス制約の作成
+  const mouse = Mouse.create(render.canvas);
+  const mouseConstraint = MouseConstraint.create(engine, {
+    mouse: mouse,
+    constraint: {
+      stiffness: 0.2,
+      render: {
+        visible: false
+      }
+    }
+  });
+
+  // マウスイベントの有効化
+  World.add(engine.world, mouseConstraint);
+  render.mouse = mouse;
+
+  // マウスクリック時の処理
+  Events.on(mouseConstraint, 'mouseup', (event) => {
+    const { mouse } = event;
+
+    // クリック位置に円を生成
+    const obj = createYen(mouse.position.x, 0, "yen1")
+    World.add(engine.world, [obj]);
+  });
+
   // ボディの作成（円）
   const circle = createYen(canvasWidth / 2, canvasHeight / 5, "yen1");
   const circle2 = createYen(canvasWidth / 2, -canvasHeight / 5, "yen1");
@@ -103,16 +140,6 @@
   // コンポジットに円を追加
   World.add(engine.world, [circle, circle2, circle3, circle4, circle5, circle6]);
 
-  // Matter.js エンジンの描画
-  Render.run(Render.create({
-    element: document.body,
-    engine: engine,
-    options: {
-      width: canvasWidth,
-      height: canvasHeight,
-      wireframes: false
-    }
-  }));
 </script>
 
 </body>
