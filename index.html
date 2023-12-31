@@ -35,16 +35,16 @@
   const canvasHeight = fieldHeight + upperPadding + bottomPadding;
 
   const moneySettings = {
-    yen1: { radius: 20, restitution: 0.7, score: 1, next: "yen5", render: { fillStyle: "red" }},
-    yen5: { radius: 30, restitution: 0.7, score: 5, next: "yen10", render: { fillStyle: "blue" }},
-    yen10: { radius: 40, restitution: 0.7, score: 10, next: "yen50", render: { fillStyle: "yellow" }},
-    yen50: { radius: 50, restitution: 0.7, score: 50, next: "yen100", render: { fillStyle: "purple" }},
-    yen100: { radius: 70, restitution: 0.7, score: 100, next: "yen500", render: { fillStyle: "red" }},
-    yen500: { radius: 90, restitution: 0.7, score: 500, next: "yen1000", render: { fillStyle: "blue" }},
-    yen1000: { radius: 110, restitution: 0.7, score: 1000, next: "yen2000", render: { fillStyle: "yellow" }},
-    yen2000: { radius: 130, restitution: 0.7, score: 2000, next: "yen5000", render: { fillStyle: "purple" }},
-    yen5000: { radius: 150, restitution: 0.7, score: 5000, next: "yen10000", render: { fillStyle: "red" }},
-    yen10000: { radius: 170, restitution: 0.7, score: 10000, next: null, render: { fillStyle: "white" }},
+    yen1: { radius: 20, restitution: 0.7, score: 1, next: "yen5", render: { sprite: { texture: "./img/1.png" }}},
+    yen5: { radius: 30, restitution: 0.7, score: 5, next: "yen10", render: { sprite: { texture: "./img/5.png" }}},
+    yen10: { radius: 40, restitution: 0.7, score: 10, next: "yen50", render: { sprite: { texture: "./img/10.png" }}},
+    yen50: { radius: 50, restitution: 0.7, score: 50, next: "yen100", render: { sprite: { texture: "./img/50.png" }}},
+    yen100: { radius: 70, restitution: 0.7, score: 100, next: "yen500", render: { sprite: { texture: "./img/100.png" }}},
+    yen500: { radius: 90, restitution: 0.7, score: 500, next: "yen1000", render: { sprite: { texture: "./img/500.png" }}},
+    yen1000: { radius: 110, restitution: 0.7, score: 1000, next: "yen2000", render: { sprite: { texture: "./img/1000.png" }}},
+    yen2000: { radius: 130, restitution: 0.7, score: 2000, next: "yen5000", render: { sprite: { texture: "./img/2000.png" }}},
+    yen5000: { radius: 150, restitution: 0.7, score: 5000, next: "yen10000", render: { sprite: { texture: "./img/5000.png" }}},
+    yen10000: { radius: 170, restitution: 0.7, score: 10000, next: null, render: { sprite: { texture: "./img/10000.png" }}},
   };
 
   // システムの初期化
