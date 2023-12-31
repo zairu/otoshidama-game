@@ -21,7 +21,11 @@
 
 <script src="matter-js/build/matter.js"></script>
 <script>
-  const { Engine, Runner, Bodies, World, Composite, Render, Events, Mouse, MouseConstraint } = Matter;
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  const { Engine, Runner, Body, Bodies, World, Composite, Render, Events, Mouse, MouseConstraint } = Matter;
 
   const engine = Engine.create();
   const runner = Runner.create();
@@ -54,9 +58,10 @@
 
   // 枠の作成
   Composite.add(engine.world, [
-    Bodies.rectangle(canvasWidth / 2, canvasHeight, canvasWidth, frameThickness, { isStatic: true }),
-    Bodies.rectangle(0, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true }),
-    Bodies.rectangle(canvasWidth, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true }),
+    Bodies.rectangle(canvasWidth / 2, canvasHeight, canvasWidth, frameThickness, { isStatic: true, render: { fillStyle: "red" }}),
+    Bodies.rectangle(0, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true, render: { fillStyle: "red" }}),
+    Bodies.rectangle(canvasWidth, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true, render: { fillStyle: "red" }}),
+    Bodies.rectangle(canvasWidth / 2, upperPadding / 2, canvasWidth, upperPadding, { isStatic: true, isSensor: true, render: { fillStyle: "blue" }}),
   ]);
 
   const moneySettings = {
@@ -120,13 +125,41 @@
   World.add(engine.world, mouseConstraint);
   render.mouse = mouse;
 
+  var currentYen = null;
+
+  currentYen = createYen(mouse.position.x, 20, "yen1");
+  Body.set(currentYen, "isStatic", true);
+  Body.set(currentYen, "isSensor", true);
+  World.add(engine.world, [currentYen]);
+
   // マウスクリック時の処理
   Events.on(mouseConstraint, 'mouseup', (event) => {
     const { mouse } = event;
 
     // クリック位置に円を生成
-    const obj = createYen(mouse.position.x, 0, "yen1")
-    World.add(engine.world, [obj]);
+    Body.set(currentYen, "isStatic", false);
+    Body.set(currentYen, "isSensor", false);
+    currentYen = null;
+
+    async function delayedExecutionAsync() {
+      await delay(1000);
+
+      currentYen = createYen(mouse.position.x, 20, "yen1");
+      Body.set(currentYen, "isStatic", true);
+      Body.set(currentYen, "isSensor", true);
+      World.add(engine.world, [currentYen]);
+    }
+
+    delayedExecutionAsync();
+  });
+
+  // マウス移動時の処理
+  Events.on(mouseConstraint, 'mousemove', (event) => {
+    const { mouse } = event;
+    if (currentYen != null)
+    {
+      Body.setPosition(currentYen, { x: mouse.position.x, y: 20 });
+    }
   });
 
   // ボディの作成（円）
