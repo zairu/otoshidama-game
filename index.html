@@ -41,8 +41,8 @@
   const leftPadding = frameThickness;
   const rightPadding = frameThickness;
   const bottomPadding = frameThickness;
-  const canvasWidth = fieldWidth + leftPadding / 2 + rightPadding / 2;
-  const canvasHeight = fieldHeight + upperPadding / 2 + bottomPadding;
+  const canvasWidth = fieldWidth + leftPadding + rightPadding;
+  const canvasHeight = fieldHeight + upperPadding + bottomPadding;
 
   // Matter.js エンジンの描画
   const render = Render.create({
@@ -58,9 +58,9 @@
 
   // 枠の作成
   Composite.add(engine.world, [
-    Bodies.rectangle(canvasWidth / 2, canvasHeight, canvasWidth, frameThickness, { isStatic: true, render: { fillStyle: "red" }}),
-    Bodies.rectangle(0, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true, render: { fillStyle: "red" }}),
-    Bodies.rectangle(canvasWidth, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true, render: { fillStyle: "red" }}),
+    Bodies.rectangle(canvasWidth / 2, canvasHeight - frameThickness / 2, canvasWidth, frameThickness, { isStatic: true, render: { fillStyle: "red" }}),
+    Bodies.rectangle(frameThickness / 2, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true, render: { fillStyle: "red" }}),
+    Bodies.rectangle(canvasWidth - frameThickness / 2, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true, render: { fillStyle: "red" }}),
     Bodies.rectangle(canvasWidth / 2, upperPadding / 2, canvasWidth, upperPadding, { isStatic: true, isSensor: true, render: { fillStyle: "blue" }}),
   ]);
 
@@ -137,11 +137,21 @@
   World.add(engine.world, mouseConstraint);
   render.mouse = mouse;
 
+  function clampCurrentYenX(body) {
+    const setting = moneySettings[body.label];
+    const left = leftPadding + setting.radius;
+    const right = leftPadding + fieldWidth - setting.radius;
+    const x = Math.min(Math.max(left, body.position.x), right);
+    const y = body.position.y;
+
+    Body.setPosition(body, { x: x, y: y });
+  }
   var currentYen = null;
 
   currentYen = createYen(mouse.position.x, 20, selectDropYen());
   Body.set(currentYen, "isStatic", true);
   Body.set(currentYen, "isSensor", true);
+  clampCurrentYenX(currentYen);
   World.add(engine.world, [currentYen]);
 
   // マウスクリック時の処理
@@ -163,6 +173,7 @@
       currentYen = createYen(mouse.position.x, 20, selectDropYen());
       Body.set(currentYen, "isStatic", true);
       Body.set(currentYen, "isSensor", true);
+      clampCurrentYenX(currentYen);
       World.add(engine.world, [currentYen]);
     }
 
@@ -175,6 +186,7 @@
     if (currentYen != null)
     {
       Body.setPosition(currentYen, { x: mouse.position.x, y: 20 });
+      clampCurrentYenX(currentYen);
     }
   });
 
