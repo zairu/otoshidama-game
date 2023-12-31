@@ -21,7 +21,7 @@
 
 <script src="matter-js/build/matter.js"></script>
 <script>
-  const { Engine, Runner, Bodies, World, Composite, Render } = Matter;
+  const { Engine, Runner, Bodies, World, Composite, Render, Events } = Matter;
 
   const engine = Engine.create();
   const runner = Runner.create();
@@ -47,9 +47,35 @@
   // ランナーの実行
   Runner.run(runner, engine);
 
+  function onCollision(event) {
+    const pairs = event.pairs;
+
+    for (let i = 0; i < pairs.length; i++) {
+      const pair = pairs[i];
+
+      // 衝突したのが円と円の場合
+      if (pair.bodyA.label === pair.bodyB.label) {
+        const collisionX = (pair.bodyA.position.x + pair.bodyB.position.x) / 2;
+        const collisionY = (pair.bodyA.position.y + pair.bodyB.position.y) / 2;
+
+        // 四角形の生成
+        const rectangle = Bodies.rectangle(collisionX, collisionY, canvasWidth / 20, canvasWidth / 20);
+
+        // 衝突した円を削除
+        World.remove(engine.world, [pair.bodyA, pair.bodyB]);
+
+        // 四角形を追加
+        World.add(engine.world, [rectangle]);
+      }
+    }
+  }
+
+  // Matter.js イベントハンドラの登録
+  Events.on(engine, 'collisionStart', onCollision);
+
   // ボディの作成（円）
-  const circle = Bodies.circle(canvasWidth / 2, canvasHeight / 5, canvasWidth / 20, { restitution: 0.7 });
-  const circle2 = Bodies.circle(canvasWidth / 2, -canvasHeight / 5, canvasWidth / 20, { restitution: 0.7 });
+  const circle = Bodies.circle(canvasWidth / 2, canvasHeight / 5, canvasWidth / 20, { restitution: 0.7, label: "1 yen" });
+  const circle2 = Bodies.circle(canvasWidth / 2, -canvasHeight / 5, canvasWidth / 20, { restitution: 0.7, label: "1 yen" });
 
   // コンポジットに円を追加
   World.add(engine.world, [circle, circle2]);
