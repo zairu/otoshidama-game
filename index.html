@@ -65,20 +65,32 @@
   ]);
 
   const moneySettings = {
-    yen1 : { type:"circle", radius: 15, restitution: 0.7, next: "yen5" },
-    yen5 : { type:"circle", radius: 20, restitution: 0.7, next: "yen10" },
-    yen10: { type:"circle", radius: 30, restitution: 0.7, next: null },
+    yen1 : { type:"circle", radius: 20, restitution: 0.7, next: "yen5", render: { fillStyle: "red" }},
+    yen5 : { type:"circle", radius: 30, restitution: 0.7, next: "yen10", render: { fillStyle: "blue" }},
+    yen10: { type:"circle", radius: 40, restitution: 0.7, next: "yen50", render: { fillStyle: "yellow" }},
+    yen50 : { type:"circle", radius: 50, restitution: 0.7, next: "yen100", render: { fillStyle: "purple" }},
+    yen100 : { type:"circle", radius: 70, restitution: 0.7, next: "yen500", render: { fillStyle: "red" }},
+    yen500: { type:"circle", radius: 90, restitution: 0.7, next: "yen1000", render: { fillStyle: "blue" }},
+    yen1000: { type:"circle", radius: 110, restitution: 0.7, next: "yen2000", render: { fillStyle: "yellow" }},
+    yen2000: { type:"circle", radius: 130, restitution: 0.7, next: "yen5000", render: { fillStyle: "purple" }},
+    yen5000: { type:"circle", radius: 150, restitution: 0.7, next: "yen10000", render: { fillStyle: "red" }},
+    yen10000: { type:"circle", radius: 170, restitution: 0.7, next: null, render: { fillStyle: "white" }},
   };
 
   function createYen(x, y, label) {
     const setting = moneySettings[label];
     if (setting.type === "circle") {
-      return Bodies.circle(x, y, setting.radius, { restitution: setting.restitution, label: label });
+      return Bodies.circle(x, y, setting.radius, { restitution: setting.restitution, label: label, render: setting.render });
     }
     else if (setting.type === "rectangle") {
-      // todo
+      return Bodies.rectangle(x, y, setting.width, setting.height, { restitution: setting.restitution, label: label, render: setting.render });
     }
     return null;
+  }
+
+  function selectDropYen() {
+    const table = [ "yen1", "yen5", "yen10", "yen50" ];
+    return table[Math.floor(Math.random() * table.length)];
   }
 
   function onCollision(event) {
@@ -127,7 +139,7 @@
 
   var currentYen = null;
 
-  currentYen = createYen(mouse.position.x, 20, "yen1");
+  currentYen = createYen(mouse.position.x, 20, selectDropYen());
   Body.set(currentYen, "isStatic", true);
   Body.set(currentYen, "isSensor", true);
   World.add(engine.world, [currentYen]);
@@ -135,6 +147,10 @@
   // マウスクリック時の処理
   Events.on(mouseConstraint, 'mouseup', (event) => {
     const { mouse } = event;
+
+    if (currentYen == null) {
+      return;
+    }
 
     // クリック位置に円を生成
     Body.set(currentYen, "isStatic", false);
@@ -144,7 +160,7 @@
     async function delayedExecutionAsync() {
       await delay(1000);
 
-      currentYen = createYen(mouse.position.x, 20, "yen1");
+      currentYen = createYen(mouse.position.x, 20, selectDropYen());
       Body.set(currentYen, "isStatic", true);
       Body.set(currentYen, "isSensor", true);
       World.add(engine.world, [currentYen]);
@@ -161,17 +177,6 @@
       Body.setPosition(currentYen, { x: mouse.position.x, y: 20 });
     }
   });
-
-  // ボディの作成（円）
-  const circle = createYen(canvasWidth / 2, canvasHeight / 5, "yen1");
-  const circle2 = createYen(canvasWidth / 2, -canvasHeight / 5, "yen1");
-  const circle3 = createYen(canvasWidth / 2, -canvasHeight / 3, "yen5");
-  const circle4 = createYen(canvasWidth / 2, -canvasHeight, "yen5");
-  const circle5 = createYen(canvasWidth / 2, -canvasHeight * 2, "yen5");
-  const circle6 = createYen(canvasWidth / 2, -canvasHeight * 3, "yen10");
-
-  // コンポジットに円を追加
-  World.add(engine.world, [circle, circle2, circle3, circle4, circle5, circle6]);
 
 </script>
 
