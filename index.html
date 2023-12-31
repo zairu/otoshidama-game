@@ -35,16 +35,16 @@
   const canvasHeight = fieldHeight + upperPadding + bottomPadding;
 
   const moneySettings = {
-    yen1 : { type:"circle", radius: 20, restitution: 0.7, score: 1, next: "yen5", render: { fillStyle: "red" }},
-    yen5 : { type:"circle", radius: 30, restitution: 0.7, score: 5, next: "yen10", render: { fillStyle: "blue" }},
-    yen10: { type:"circle", radius: 40, restitution: 0.7, score: 10, next: "yen50", render: { fillStyle: "yellow" }},
-    yen50 : { type:"circle", radius: 50, restitution: 0.7, score: 50, next: "yen100", render: { fillStyle: "purple" }},
-    yen100 : { type:"circle", radius: 70, restitution: 0.7, score: 100, next: "yen500", render: { fillStyle: "red" }},
-    yen500: { type:"circle", radius: 90, restitution: 0.7, score: 500, next: "yen1000", render: { fillStyle: "blue" }},
-    yen1000: { type:"circle", radius: 110, restitution: 0.7, score: 1000, next: "yen2000", render: { fillStyle: "yellow" }},
-    yen2000: { type:"circle", radius: 130, restitution: 0.7, score: 2000, next: "yen5000", render: { fillStyle: "purple" }},
-    yen5000: { type:"circle", radius: 150, restitution: 0.7, score: 5000, next: "yen10000", render: { fillStyle: "red" }},
-    yen10000: { type:"circle", radius: 170, restitution: 0.7, score: 10000, next: null, render: { fillStyle: "white" }},
+    yen1: { radius: 20, restitution: 0.7, score: 1, next: "yen5", render: { fillStyle: "red" }},
+    yen5: { radius: 30, restitution: 0.7, score: 5, next: "yen10", render: { fillStyle: "blue" }},
+    yen10: { radius: 40, restitution: 0.7, score: 10, next: "yen50", render: { fillStyle: "yellow" }},
+    yen50: { radius: 50, restitution: 0.7, score: 50, next: "yen100", render: { fillStyle: "purple" }},
+    yen100: { radius: 70, restitution: 0.7, score: 100, next: "yen500", render: { fillStyle: "red" }},
+    yen500: { radius: 90, restitution: 0.7, score: 500, next: "yen1000", render: { fillStyle: "blue" }},
+    yen1000: { radius: 110, restitution: 0.7, score: 1000, next: "yen2000", render: { fillStyle: "yellow" }},
+    yen2000: { radius: 130, restitution: 0.7, score: 2000, next: "yen5000", render: { fillStyle: "purple" }},
+    yen5000: { radius: 150, restitution: 0.7, score: 5000, next: "yen10000", render: { fillStyle: "red" }},
+    yen10000: { radius: 170, restitution: 0.7, score: 10000, next: null, render: { fillStyle: "white" }},
   };
 
   // システムの初期化
@@ -69,13 +69,7 @@
   // ゲームロジック関数の定義
   function createYen(x, y, label) {
     const setting = moneySettings[label];
-    if (setting.type === "circle") {
-      return Bodies.circle(x, y, setting.radius, { restitution: setting.restitution, label: label, render: setting.render });
-    }
-    else if (setting.type === "rectangle") {
-      return Bodies.rectangle(x, y, setting.width, setting.height, { restitution: setting.restitution, label: label, render: setting.render });
-    }
-    return null;
+    return Bodies.circle(x, y, setting.radius, { restitution: setting.restitution, label: label, render: setting.render });
   }
 
   function selectDropYen() {
