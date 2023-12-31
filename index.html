@@ -226,6 +226,8 @@
 
   Events.on(mouseConstraint, 'mouseup', onMouseUp);
   Events.on(mouseConstraint, 'mousemove', onMouseMove);
+  // タップ時に座標が飛んで意図しない位置に生成されるのを防ぐためdown時にmove相当の処理を呼ぶ
+  Events.on(mouseConstraint, 'mousedown', onMouseMove);
 
   // 状態の初期化
   var isGameOver = true;
