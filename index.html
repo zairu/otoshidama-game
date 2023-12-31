@@ -58,10 +58,14 @@
 
   // 枠の作成
   Composite.add(engine.world, [
-    Bodies.rectangle(canvasWidth / 2, canvasHeight - frameThickness / 2, canvasWidth, frameThickness, { isStatic: true, render: { fillStyle: "red" }}),
-    Bodies.rectangle(frameThickness / 2, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true, render: { fillStyle: "red" }}),
-    Bodies.rectangle(canvasWidth - frameThickness / 2, canvasHeight / 2, frameThickness, canvasHeight, { isStatic: true, render: { fillStyle: "red" }}),
-    Bodies.rectangle(canvasWidth / 2, upperPadding / 2, canvasWidth, upperPadding, { isStatic: true, isSensor: true, render: { fillStyle: "blue" }}),
+    Bodies.rectangle(canvasWidth / 2, canvasHeight - frameThickness / 2, canvasWidth, frameThickness,
+      { isStatic: true, label:"Wall" , render: { fillStyle: "red" }}),
+    Bodies.rectangle(frameThickness / 2, canvasHeight / 2, frameThickness, canvasHeight,
+      { isStatic: true, label:"Wall", render: { fillStyle: "red" }}),
+    Bodies.rectangle(canvasWidth - frameThickness / 2, canvasHeight / 2, frameThickness, canvasHeight,
+      { isStatic: true, label:"Wall", render: { fillStyle: "red" }}),
+    Bodies.rectangle(canvasWidth / 2, upperPadding / 2, canvasWidth, upperPadding,
+      { isStatic: true, label:"GameOverZone", isSensor: true, render: { fillStyle: "blue" }}),
   ]);
 
   const moneySettings = {
@@ -76,6 +80,8 @@
     yen5000: { type:"circle", radius: 150, restitution: 0.7, next: "yen10000", render: { fillStyle: "red" }},
     yen10000: { type:"circle", radius: 170, restitution: 0.7, next: null, render: { fillStyle: "white" }},
   };
+
+  var isGameOver = false;
 
   function createYen(x, y, label) {
     const setting = moneySettings[label];
@@ -94,6 +100,11 @@
   }
 
   function onCollision(event) {
+    if (isGameOver === true)
+    {
+      return;
+    }
+
     const pairs = event.pairs;
 
     for (let i = 0; i < pairs.length; i++) {
@@ -114,6 +125,17 @@
           const newYen = createYen(collisionX, collisionY, nextLabel);
           World.add(engine.world, [newYen]);
         }
+      }
+
+      // GameOver判定
+      if (((pair.bodyA.label === "GameOverZone" && pair.bodyB.label !== "Wall") || (pair.bodyA.label !== "Wall" && pair.bodyB.label === "GameOverZone"))
+        && (pair.bodyA.invisible !== true && pair.bodyB.invisible !== true)) {
+        isGameOver = true;
+        // 画面を止める
+        const allBodies = Composite.allBodies(engine.world);
+        allBodies.forEach(object => {
+          Body.set(object, "isStatic", true);
+        });
       }
     }
   }
@@ -157,24 +179,36 @@
   // マウスクリック時の処理
   Events.on(mouseConstraint, 'mouseup', (event) => {
     const { mouse } = event;
-
+    if (isGameOver === true) {
+      return;
+    }
     if (currentYen == null) {
       return;
     }
 
-    // クリック位置に円を生成
-    Body.set(currentYen, "isStatic", false);
-    Body.set(currentYen, "isSensor", false);
-    currentYen = null;
+    const dropping = currentYen;
 
+    // クリック位置に円を生成
+    Body.set(dropping, "isStatic", false);
+    Body.set(dropping, "isSensor", false);
+    // ある程度落ちるまでゲームオーバー判定を無効化する
+    dropping.invisible = true;
+
+    currentYen = null;
     async function delayedExecutionAsync() {
       await delay(1000);
+      if (isGameOver === true) {
+        return;
+      }
+      dropping["invisible"] = false;
 
-      currentYen = createYen(mouse.position.x, 20, selectDropYen());
-      Body.set(currentYen, "isStatic", true);
-      Body.set(currentYen, "isSensor", true);
-      clampCurrentYenX(currentYen);
-      World.add(engine.world, [currentYen]);
+      const nextYen = createYen(mouse.position.x, 20, selectDropYen());
+      Body.set(nextYen, "isStatic", true);
+      Body.set(nextYen, "isSensor", true);
+      clampCurrentYenX(nextYen);
+      World.add(engine.world, [nextYen]);
+
+      currentYen = nextYen;
     }
 
     delayedExecutionAsync();
@@ -183,8 +217,10 @@
   // マウス移動時の処理
   Events.on(mouseConstraint, 'mousemove', (event) => {
     const { mouse } = event;
-    if (currentYen != null)
-    {
+    if (isGameOver === true) {
+      return;
+    }
+    if (currentYen != null) {
       Body.setPosition(currentYen, { x: mouse.position.x, y: 20 });
       clampCurrentYenX(currentYen);
     }
