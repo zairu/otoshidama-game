@@ -61,6 +61,7 @@
     options: {
       width: canvasWidth,
       height: canvasHeight,
+      background: "#f0f0f0",
       wireframes: false
     }
   });
@@ -150,6 +151,7 @@
         allBodies.forEach(object => {
           Body.set(object, "isStatic", true);
         });
+        gameOverZone.render.fillStyle = "red"
       }
     }
   }
@@ -232,6 +234,8 @@
   var highScore = score;
 
   var gameId = -1;
+  // 演出用
+  var gameOverZone = null;
 
   function startGame()
   {
@@ -243,14 +247,16 @@
     // 枠の作成
     Composite.add(engine.world, [
       Bodies.rectangle(canvasWidth / 2, canvasHeight - frameThickness / 2, canvasWidth, frameThickness,
-        { isStatic: true, label:"Wall" , render: { fillStyle: "red" }}),
+        { isStatic: true, label:"Wall" , render: { fillStyle: "#14151f" }}),
       Bodies.rectangle(frameThickness / 2, canvasHeight / 2, frameThickness, canvasHeight,
-        { isStatic: true, label:"Wall", render: { fillStyle: "red" }}),
+        { isStatic: true, label:"Wall", render: { fillStyle: "#14151f" }}),
       Bodies.rectangle(canvasWidth - frameThickness / 2, canvasHeight / 2, frameThickness, canvasHeight,
-        { isStatic: true, label:"Wall", render: { fillStyle: "red" }}),
-      Bodies.rectangle(canvasWidth / 2, upperPadding / 2, canvasWidth, upperPadding,
-        { isStatic: true, label:"GameOverZone", isSensor: true, render: { fillStyle: "blue" }}),
+        { isStatic: true, label:"Wall", render: { fillStyle: "#14151f" }}),
     ]);
+
+    gameOverZone = Bodies.rectangle(canvasWidth / 2, upperPadding / 2, canvasWidth, upperPadding,
+        { isStatic: true, label:"GameOverZone", isSensor: true, render: { fillStyle: "#f0f080" }});
+    Composite.add(engine.world, [gameOverZone]);
 
     score = 0;
     updateScoreText(score, highScore);
