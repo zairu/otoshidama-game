@@ -21,19 +21,7 @@
 
 <script src="matter-js/build/matter.js"></script>
 <script>
-  function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  const { Engine, Runner, Body, Bodies, Composite, Render, Events, Mouse, MouseConstraint } = Matter;
-
-  const engine = Engine.create();
-  const runner = Runner.create();
-
-  // ランナーの実行
-  Runner.run(runner, engine);
-
-  // 領域のサイズ
+  // 各種設定
   const fieldWidth = 600;
   const fieldHeight = 600;
   const upperPadding = 100;
@@ -43,30 +31,6 @@
   const bottomPadding = frameThickness;
   const canvasWidth = fieldWidth + leftPadding + rightPadding;
   const canvasHeight = fieldHeight + upperPadding + bottomPadding;
-
-  // Matter.js エンジンの描画
-  const render = Render.create({
-    element: document.body,
-    engine: engine,
-    options: {
-      width: canvasWidth,
-      height: canvasHeight,
-      wireframes: false
-    }
-  });
-  Render.run(render);
-
-  // 枠の作成
-  Composite.add(engine.world, [
-    Bodies.rectangle(canvasWidth / 2, canvasHeight - frameThickness / 2, canvasWidth, frameThickness,
-      { isStatic: true, label:"Wall" , render: { fillStyle: "red" }}),
-    Bodies.rectangle(frameThickness / 2, canvasHeight / 2, frameThickness, canvasHeight,
-      { isStatic: true, label:"Wall", render: { fillStyle: "red" }}),
-    Bodies.rectangle(canvasWidth - frameThickness / 2, canvasHeight / 2, frameThickness, canvasHeight,
-      { isStatic: true, label:"Wall", render: { fillStyle: "red" }}),
-    Bodies.rectangle(canvasWidth / 2, upperPadding / 2, canvasWidth, upperPadding,
-      { isStatic: true, label:"GameOverZone", isSensor: true, render: { fillStyle: "blue" }}),
-  ]);
 
   const moneySettings = {
     yen1 : { type:"circle", radius: 20, restitution: 0.7, next: "yen5", render: { fillStyle: "red" }},
@@ -81,8 +45,26 @@
     yen10000: { type:"circle", radius: 170, restitution: 0.7, next: null, render: { fillStyle: "white" }},
   };
 
-  var isGameOver = false;
+  // システムの初期化
+  const { Engine, Runner, Body, Bodies, Composite, Render, Events, Mouse, MouseConstraint } = Matter;
 
+  const engine = Engine.create();
+  const runner = Runner.create();
+
+  Runner.run(runner, engine);
+
+  const render = Render.create({
+    element: document.body,
+    engine: engine,
+    options: {
+      width: canvasWidth,
+      height: canvasHeight,
+      wireframes: false
+    }
+  });
+  Render.run(render);
+
+  // ゲームロジック関数の定義
   function createYen(x, y, label) {
     const setting = moneySettings[label];
     if (setting.type === "circle") {
@@ -99,6 +81,26 @@
     return table[Math.floor(Math.random() * table.length)];
   }
 
+  function clampCurrentYenX(body) {
+    const setting = moneySettings[body.label];
+    const left = leftPadding + setting.radius;
+    const right = leftPadding + fieldWidth - setting.radius;
+    const x = Math.min(Math.max(left, body.position.x), right);
+    const y = body.position.y;
+
+    Body.setPosition(body, { x: x, y: y });
+  }
+
+  function createCurrentYen(x, y)
+  {
+    const obj = createYen(x, y, selectDropYen());
+    Body.set(obj, "isStatic", true);
+    Body.set(obj, "isSensor", true);
+    clampCurrentYenX(obj);
+    return obj;
+  }
+
+  // イベント関数の定義
   function onCollision(event) {
     if (isGameOver === true)
     {
@@ -140,44 +142,18 @@
     }
   }
 
-  // Matter.js イベントハンドラの登録
-  Events.on(engine, 'collisionStart', onCollision);
-
-  // マウスとマウス制約の作成
-  const mouse = Mouse.create(render.canvas);
-  const mouseConstraint = MouseConstraint.create(engine, {
-    mouse: mouse,
-    constraint: {
-      stiffness: 0,
-      render: {
-        visible: false
-      }
+  function onMouseMove(event) {
+    const { mouse } = event;
+    if (isGameOver === true) {
+      return;
     }
-  });
-
-  // マウスイベントの有効化
-  Composite.add(engine.world, mouseConstraint);
-  render.mouse = mouse;
-
-  function clampCurrentYenX(body) {
-    const setting = moneySettings[body.label];
-    const left = leftPadding + setting.radius;
-    const right = leftPadding + fieldWidth - setting.radius;
-    const x = Math.min(Math.max(left, body.position.x), right);
-    const y = body.position.y;
-
-    Body.setPosition(body, { x: x, y: y });
+    if (currentYen != null) {
+      Body.setPosition(currentYen, { x: mouse.position.x, y: 20 });
+      clampCurrentYenX(currentYen);
+    }
   }
-  var currentYen = null;
 
-  currentYen = createYen(mouse.position.x, 20, selectDropYen());
-  Body.set(currentYen, "isStatic", true);
-  Body.set(currentYen, "isSensor", true);
-  clampCurrentYenX(currentYen);
-  Composite.add(engine.world, [currentYen]);
-
-  // マウスクリック時の処理
-  Events.on(mouseConstraint, 'mouseup', (event) => {
+  function onMouseUp(event) {
     const { mouse } = event;
     if (isGameOver === true) {
       return;
@@ -195,37 +171,65 @@
     dropping.invisible = true;
 
     currentYen = null;
+
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
     async function delayedExecutionAsync() {
+
       await delay(1000);
       if (isGameOver === true) {
         return;
       }
       dropping["invisible"] = false;
 
-      const nextYen = createYen(mouse.position.x, 20, selectDropYen());
-      Body.set(nextYen, "isStatic", true);
-      Body.set(nextYen, "isSensor", true);
-      clampCurrentYenX(nextYen);
+      const nextYen = createCurrentYen(mouse.position.x, 20);
       Composite.add(engine.world, [nextYen]);
 
       currentYen = nextYen;
     }
 
     delayedExecutionAsync();
+  }
+
+  // Matter.js イベントハンドラの登録
+  Events.on(engine, 'collisionStart', onCollision);
+
+  // マウスとマウス制約の作成
+  const mouse = Mouse.create(render.canvas);
+  render.mouse = mouse;
+  const mouseConstraint = MouseConstraint.create(engine, {
+    mouse: mouse,
+    constraint: {
+      stiffness: 0,
+      render: {
+        visible: false
+      }
+    }
   });
 
-  // マウス移動時の処理
-  Events.on(mouseConstraint, 'mousemove', (event) => {
-    const { mouse } = event;
-    if (isGameOver === true) {
-      return;
-    }
-    if (currentYen != null) {
-      Body.setPosition(currentYen, { x: mouse.position.x, y: 20 });
-      clampCurrentYenX(currentYen);
-    }
-  });
+  Events.on(mouseConstraint, 'mouseup', onMouseUp);
+  Events.on(mouseConstraint, 'mousemove', onMouseMove);
 
+  // 枠の作成
+  Composite.add(engine.world, [
+    Bodies.rectangle(canvasWidth / 2, canvasHeight - frameThickness / 2, canvasWidth, frameThickness,
+      { isStatic: true, label:"Wall" , render: { fillStyle: "red" }}),
+    Bodies.rectangle(frameThickness / 2, canvasHeight / 2, frameThickness, canvasHeight,
+      { isStatic: true, label:"Wall", render: { fillStyle: "red" }}),
+    Bodies.rectangle(canvasWidth - frameThickness / 2, canvasHeight / 2, frameThickness, canvasHeight,
+      { isStatic: true, label:"Wall", render: { fillStyle: "red" }}),
+    Bodies.rectangle(canvasWidth / 2, upperPadding / 2, canvasWidth, upperPadding,
+      { isStatic: true, label:"GameOverZone", isSensor: true, render: { fillStyle: "blue" }}),
+  ]);
+
+  // 状態の初期化
+  var isGameOver = false;
+  var currentYen = createCurrentYen(leftPadding + fieldWidth / 2, 20);
+  Composite.add(engine.world, [currentYen]);
+
+  // マウスイベントの有効化
+  Composite.add(engine.world, mouseConstraint);
 </script>
 
 </body>
