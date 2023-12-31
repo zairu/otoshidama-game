@@ -35,16 +35,16 @@
   const canvasHeight = fieldHeight + upperPadding + bottomPadding;
 
   const moneySettings = {
-    yen1 : { type:"circle", radius: 20, restitution: 0.7, next: "yen5", render: { fillStyle: "red" }},
-    yen5 : { type:"circle", radius: 30, restitution: 0.7, next: "yen10", render: { fillStyle: "blue" }},
-    yen10: { type:"circle", radius: 40, restitution: 0.7, next: "yen50", render: { fillStyle: "yellow" }},
-    yen50 : { type:"circle", radius: 50, restitution: 0.7, next: "yen100", render: { fillStyle: "purple" }},
-    yen100 : { type:"circle", radius: 70, restitution: 0.7, next: "yen500", render: { fillStyle: "red" }},
-    yen500: { type:"circle", radius: 90, restitution: 0.7, next: "yen1000", render: { fillStyle: "blue" }},
-    yen1000: { type:"circle", radius: 110, restitution: 0.7, next: "yen2000", render: { fillStyle: "yellow" }},
-    yen2000: { type:"circle", radius: 130, restitution: 0.7, next: "yen5000", render: { fillStyle: "purple" }},
-    yen5000: { type:"circle", radius: 150, restitution: 0.7, next: "yen10000", render: { fillStyle: "red" }},
-    yen10000: { type:"circle", radius: 170, restitution: 0.7, next: null, render: { fillStyle: "white" }},
+    yen1 : { type:"circle", radius: 20, restitution: 0.7, score: 1, next: "yen5", render: { fillStyle: "red" }},
+    yen5 : { type:"circle", radius: 30, restitution: 0.7, score: 5, next: "yen10", render: { fillStyle: "blue" }},
+    yen10: { type:"circle", radius: 40, restitution: 0.7, score: 10, next: "yen50", render: { fillStyle: "yellow" }},
+    yen50 : { type:"circle", radius: 50, restitution: 0.7, score: 50, next: "yen100", render: { fillStyle: "purple" }},
+    yen100 : { type:"circle", radius: 70, restitution: 0.7, score: 100, next: "yen500", render: { fillStyle: "red" }},
+    yen500: { type:"circle", radius: 90, restitution: 0.7, score: 500, next: "yen1000", render: { fillStyle: "blue" }},
+    yen1000: { type:"circle", radius: 110, restitution: 0.7, score: 1000, next: "yen2000", render: { fillStyle: "yellow" }},
+    yen2000: { type:"circle", radius: 130, restitution: 0.7, score: 2000, next: "yen5000", render: { fillStyle: "purple" }},
+    yen5000: { type:"circle", radius: 150, restitution: 0.7, score: 5000, next: "yen10000", render: { fillStyle: "red" }},
+    yen10000: { type:"circle", radius: 170, restitution: 0.7, score: 10000, next: null, render: { fillStyle: "white" }},
   };
 
   // システムの初期化
@@ -102,6 +102,17 @@
     return obj;
   }
 
+  function calcScore(label) {
+    const setting = moneySettings[label];
+    return setting.score;
+  }
+
+  function addScore(point) {
+    score += point;
+    highScore = Math.max(highScore, score);
+    updateScoreText(score, highScore);
+  }
+
   // イベント関数の定義
   function onCollision(event) {
     if (isGameOver === true)
@@ -120,6 +131,11 @@
         const collisionY = (pair.bodyA.position.y + pair.bodyB.position.y) / 2;
 
         const nextLabel = moneySettings[pair.bodyA.label].next;
+        // nullは最高状態なので金額を増減させずに単にobjだけ消す
+        if (nextLabel != null) {
+          const diffScore = calcScore(nextLabel) - calcScore(pair.bodyA.label) * 2;
+          addScore(diffScore);
+        }
 
         // 衝突したobj削除
         Composite.remove(engine.world, [pair.bodyA, pair.bodyB]);
@@ -172,7 +188,9 @@
     // ある程度落ちるまでゲームオーバー判定を無効化する
     dropping.invisible = true;
 
+    addScore(calcScore(currentYen.label));
     currentYen = null;
+
     const currentGame = gameId;
 
     function delay(ms) {
@@ -216,6 +234,9 @@
   // 状態の初期化
   var isGameOver = true;
   var currentYen = null;
+  var score = 0;
+  var highScore = score;
+
   var gameId = -1;
 
   function startGame()
@@ -237,6 +258,8 @@
         { isStatic: true, label:"GameOverZone", isSensor: true, render: { fillStyle: "blue" }}),
     ]);
 
+    score = 0;
+    updateScoreText(score, highScore);
     isGameOver = false;
     currentYen = createCurrentYen(leftPadding + fieldWidth / 2, 20);
     Composite.add(engine.world, [currentYen]);
@@ -248,6 +271,21 @@
   startGame();
 
   // Canvas外の表示部分
+  function updateScoreText(score, highScore)
+  {
+    const infoContainer = document.getElementById("info-container");
+    infoContainer.innerHTML = "";
+
+    const scoreText = document.createElement("p");
+    scoreText.textContent = "金額:" + score + "円";
+    infoContainer.appendChild(scoreText);
+
+    const highScoreText = document.createElement("p");
+    highScoreText.textContent = "最高金額:" + highScore + "円";
+    infoContainer.appendChild(highScoreText);
+  }
+
+  // リセットボタン
   const buttonContainer = document.getElementById("button-container");
   buttonContainer.innerHTML = "";
   const button = document.createElement("button");
