@@ -106,8 +106,7 @@
     Body.setPosition(body, { x: x, y: y });
   }
 
-  function createCurrentYen(x, y)
-  {
+  function createCurrentYen(x, y) {
     const obj = createYen(x, y, selectDropYen());
     Body.set(obj, "isStatic", true);
     Body.set(obj, "isSensor", true);
@@ -128,8 +127,7 @@
 
   // イベント関数の定義
   function onCollision(event) {
-    if (isGameOver === true)
-    {
+    if (isGameOver === true) {
       return;
     }
 
@@ -291,8 +289,7 @@
   startGame();
 
   // Canvas外の表示部分
-  function updateScoreText(score, highScore)
-  {
+  function updateScoreText(score, highScore) {
     const infoContainer = document.getElementById("info-container");
     infoContainer.innerHTML = "";
 
