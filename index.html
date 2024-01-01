@@ -67,6 +67,24 @@
   });
   Render.run(render);
 
+  function adjustCanvasSize() {
+    const canvas = document.querySelector('canvas');
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    if (window.innerWidth / window.innerHeight < canvasWidth / (canvasHeight * 10 / 7)) {
+      // 横は画面に合わせて良い
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = (window.innerWidth * canvasHeight / canvasWidth) + 'px';
+    } else {
+      // 縦を画面の70%にして幅を調整
+      const h = Math.floor(window.innerHeight * 7 / 10);
+      canvas.style.width = Math.floor(h * canvasWidth / canvasHeight) + 'px';
+      canvas.style.height = h + 'px';
+    }
+  }
+  window.addEventListener('resize', adjustCanvasSize);
+  adjustCanvasSize();
+
   // ゲームロジック関数の定義
   function createYen(x, y, label) {
     const setting = moneySettings[label];
