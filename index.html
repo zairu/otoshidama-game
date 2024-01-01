@@ -132,12 +132,15 @@
     }
 
     const pairs = event.pairs;
+    const fusioned = [];
 
     for (let i = 0; i < pairs.length; i++) {
       const pair = pairs[i];
 
       // 衝突したのが円と円の場合
-      if (pair.bodyA.label === pair.bodyB.label) {
+      if (pair.bodyA.label === pair.bodyB.label && !fusioned.includes(pair.bodyA) && !fusioned.includes(pair.bodyB)) {
+        fusioned.push(pair.bodyA);
+        fusioned.push(pair.bodyB);
         const collisionX = (pair.bodyA.position.x + pair.bodyB.position.x) / 2;
         const collisionY = (pair.bodyA.position.y + pair.bodyB.position.y) / 2;
 
